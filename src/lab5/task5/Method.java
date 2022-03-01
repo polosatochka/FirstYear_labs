@@ -15,33 +15,48 @@ public class Method {
 
     private int n1;
 
-    //    Присвоим значение полю с помощью открытого метода
-    public void meth(int l){
+    //    Присвоим значение полю с помощью открытого метода с целочисленным аргументом
+    public void setValue(int l){
         if(l<100) {
-            n1 = l;
-            System.out.println("Метод с аргументом < 100. Значение поля: " + n1);
+            this.n1 = l;
+//            System.out.println("Метод с аргументом < 100. Значение поля: " + n1);
         }
         else {
-            n1 = 100;
-            System.out.println("Метод с аргументом > 100. Значение поля: " + n1);
+            this.n1 = 100;
+//            System.out.println("Метод с аргументом > 100. Значение поля: " + n1);
         }
     }
 
     // Когда метод вызывается без аргументов, присваиваем нулевое значение
-    public void meth(){
-        n1 = 0;
-        System.out.println("Метод без аргументов. Значение поля: " + n1);
+    public void setValue(){
+        this.n1 = 0;
+//        System.out.println("Метод без аргументов. Значение поля: " + n1);
     }
 
-    //    Конструктор, присваивающий значение полю
-    public Method(int n1){
-        this.meth(n1);
-    }
-
-
-    public int check(){
+    public int getValue(){
         return n1;
     }
 
+    //    Конструктор c целочисленным аргументом, присваивающий значение полю
+    public Method(int l){
+        if(l<100) {
+            this.n1 = l;
+            System.out.println("Конструктор с аргументом < 100. Значение поля: " + n1);
+        }
+        else {
+            this.n1 = 100;
+            System.out.println("Конструктор с аргументом > 100. Значение поля: " + n1);
+        }
+    }
+    //     Конструктор без параметров
+    public Method (){
+        this.n1=0;
+        System.out.println("Конструктор без аргументов. Значение поля: " + n1);
+    }
+
+    //    Метод, проверяющий значение поля
+    public void checkValue(){
+        System.out.println("Проверка значения поля: " + getValue());
+    }
 
 }
