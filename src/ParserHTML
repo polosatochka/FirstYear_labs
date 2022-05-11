@@ -30,7 +30,7 @@ public class Scraping {
 
         try {
             //III Цикл для последовательного подключения ко всем страницам
-            for (int i = 1; i <= 10; i++) {
+            for (int i = 1; i <= numOfPages; i++) {
                 String urlNext = "https://auto.drom.ru/kia/cee~d/page" + i + "/";
                 Document documentNext = Jsoup.connect(urlNext).get();
 
