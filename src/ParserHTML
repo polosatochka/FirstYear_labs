@@ -1,0 +1,180 @@
+package parsing;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+
+public class Scraping {
+
+    public static void main(String[] args) throws IOException {
+
+        //I подключение к сайту
+        String url = "https://auto.drom.ru/kia/cee~d/";
+        Document document = Jsoup.connect(url).get();
+
+        // II Получить общее количество объявлений
+        Elements inputBoxes = document.getElementsByTag("input");
+        Element secondInputBox = inputBoxes.get(1);
+        String numOfAllAds = secondInputBox.attr("placeholder");
+        int valueOfAllAds = Integer.parseInt(numOfAllAds.replaceAll("[^0-9]", ""));
+        //получить количество страниц для парсинга
+        int numOfPages = valueOfAllAds / 20;
+        System.out.println(numOfPages);
+
+        try {
+            //III Цикл для последовательного подключения ко всем страницам
+            for (int i = 1; i <= 10; i++) {
+                String urlNext = "https://auto.drom.ru/kia/cee~d/page" + i + "/";
+                Document documentNext = Jsoup.connect(urlNext).get();
+
+
+                //1. получение даты размещения объявления
+                Elements dateOfAdvert = documentNext.getElementsByAttributeValue("data-ftid", "bull_date");
+                ArrayList<String> dates = new ArrayList<>();
+                for (Element date : dateOfAdvert) {
+                    dates.add(date.text());
+                }
+
+                //2. получение одного блока с фото из объявления через класс
+                Elements classOfPhoto = documentNext.getElementsByClass("css-11n001v e1e9ee560");
+                //получение фото из превью объявления
+                ArrayList<String> carPhotos = new ArrayList<>();
+                for (Element pic : classOfPhoto) {
+                    String photo = pic.attr(pic.select("img").attr("data-src"));
+                    carPhotos.add(photo);
+                    //Если в объявлении нет фото, в эрэй лист записывается null
+                    if (carPhotos.size() < 20) {
+                        carPhotos.add(null);
+                    }
+                }
+
+                //3. получение всех загловков объявлений
+                Elements titlesOfAdvert = documentNext.getElementsByAttributeValue("data-ftid", "bull_title");
+                //запись заголовков в эрэйлист
+                ArrayList<String> titles = new ArrayList<>();
+                for (Element title : titlesOfAdvert) {
+                    titles.add(title.text());
+                }
+
+                //4. получение всех городов из превью объявления
+                Elements citiesFromAdvert = documentNext.getElementsByClass("css-1mj3yjd e162wx9x0");
+                ArrayList<String> cities = new ArrayList<>();
+                for (Element city : citiesFromAdvert) {
+                    cities.add((city.text()));
+                }
+
+                //5. получение цены
+                Elements priceFromAdvert = documentNext.getElementsByAttributeValue("data-ftid", "bull_price");
+                ArrayList<String> prices = new ArrayList<>();
+                for (Element price : priceFromAdvert) {
+                    prices.add(price.text());
+                }
+
+                //6. получение одного объявления через класс
+                Elements classOfAdvert = documentNext.getElementsByClass("css-1wltzny ewrty961");
+
+                //6.1 получение внутренней ссылки на само объявление
+                ArrayList<String> innerLinks = new ArrayList<>();
+                for (Element absLink : classOfAdvert) {
+                    String link = absLink.select("a").attr("href");
+                    innerLinks.add(link);
+                }
+
+                ArrayList<String> descriptions = new ArrayList<>();
+                ArrayList<String> viewers = new ArrayList<>();
+                //6.2 подключение по внутренней ссылке
+                for (Element advertElement : classOfAdvert) {
+                    String advertLink = advertElement.select("a").attr("href");
+                    Document advertDoc = Jsoup.connect(advertLink).get();
+                    //7. Получение описания из объявления
+                    Elements descriptionElement = advertDoc.getElementsByClass("css-lm1m3k ezjvm5n1");
+                    descriptions.add(descriptionElement.text());
+                    //8. Получение количества просмотров
+                    Elements viewersElement = advertDoc.getElementsByClass("css-14wh0pm e1lm3vns0");
+                    viewers.add(viewersElement.text());
+                }
+
+
+                //IV Создание excel доумента
+                Workbook workbook = new HSSFWorkbook();
+                //создание Лист 1
+                Sheet sheet1 = workbook.createSheet("Список объявлений");
+                Row row0 = sheet1.createRow(0);
+                Row row23 = sheet1.createRow(23);
+
+                //создание Лист 2
+                Sheet sheet2 = workbook.createSheet("Дополнительная информация");
+                Row row00 = sheet2.createRow(0);
+
+                //заполнение шапки Лист 1
+                Cell column1 = row0.createCell(0);
+                column1.setCellValue("Время подачи");
+                Cell column2 = row0.createCell(1);
+                column2.setCellValue("Модель");
+                Cell column3 = row0.createCell(2);
+                column3.setCellValue("Город");
+                Cell column4 = row0.createCell(3);
+                column4.setCellValue("Цена");
+                Cell column5 = row0.createCell(4);
+                column5.setCellValue("Ссылка");
+                Cell column6 = row0.createCell(5);
+                column6.setCellValue("Фото");
+                //вывести общее количество объвялений
+                Cell column0 = row23.createCell(0);
+                column0.setCellValue("Общее количество объявлений: ");
+                Cell column01 = row23.createCell(1);
+                column01.setCellValue(valueOfAllAds);
+
+
+                //заполнение Лист 1 данными
+                //Проблема: список перезаписывается каждый раз в тех же строках в файле excel, а не продолжается дальше
+                    for (int rowCount = 1, index = 0; index <= titles.size(); rowCount++, index++) {
+                        Row row = sheet1.createRow(rowCount);
+                        Cell cell = row.createCell(0);
+                        cell.setCellValue(dates.get(index));
+                        Cell cell1 = row.createCell(1);
+                        cell1.setCellValue(titles.get(index));
+                        Cell cell2 = row.createCell(2);
+                        cell2.setCellValue(cities.get(index));
+                        Cell cell3 = row.createCell(3);
+                        cell3.setCellValue(prices.get(index));
+                        Cell cell4 = row.createCell(4);
+                        cell4.setCellValue(innerLinks.get(index));
+                        Cell cell5 = row.createCell(5);
+                        cell5.setCellValue(carPhotos.get(index));
+                    }
+
+                //заполнение шапки Лист 2
+                Cell column11 = row00.createCell(0);
+                column11.setCellValue("Описание");
+                Cell column22 = row00.createCell(1);
+                column22.setCellValue("Кол-во просмотров");
+
+                //заполнение Лист 2 данными
+                int rowCounting = 1;
+                for (int index = 0; rowCounting <= titles.size(); rowCounting++, index++) {
+                    Row row = sheet2.createRow(rowCounting);
+                    Cell cell = row.createCell(0);
+                    cell.setCellValue(descriptions.get(index));
+                    Cell cell1 = row.createCell(1);
+                    cell1.setCellValue(viewers.get(index));
+                }
+
+                FileOutputStream fos = new FileOutputStream("C:/Users/Анна/Downloads/AdsReport.xls");
+                workbook.write(fos);
+                fos.close();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
