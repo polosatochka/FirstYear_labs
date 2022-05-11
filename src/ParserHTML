@@ -26,7 +26,7 @@ public class Scraping {
         int valueOfAllAds = Integer.parseInt(numOfAllAds.replaceAll("[^0-9]", ""));
         //получить количество страниц для парсинга
         int numOfPages = valueOfAllAds / 20;
-        System.out.println(numOfPages);
+       // System.out.println(numOfPages);
 
         try {
             //III Цикл для последовательного подключения ко всем страницам
