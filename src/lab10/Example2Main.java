@@ -14,7 +14,7 @@ public class Example2Main {
 
         try{
             //С потоком связан файл
-            InputStream inFile = new FileInputStream("C:\\Users\\Анна\\Downloads\\example01.txt"); //созданный и заполненный файл
+            InputStream inFile = new FileInputStream("C:\\Users\\Анна\\Downloads\\file1.txt"); //созданный и заполненный файл
             readAllByByte(inFile);
             System.out.println("\n\n\n");
             inFile.close();
